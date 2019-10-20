@@ -15,7 +15,7 @@
     "react-scripts": "3.1.1",
     "tiny-invariant": "^1.0.6",
     "tiny-warning": "^1.0.3",
-    "typescript": "3.6.3"
+    "typescript": "3.6.0"
   },
   "scripts": {
     "start": "react-scripts start",

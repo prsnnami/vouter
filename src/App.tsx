@@ -3,7 +3,6 @@ import "./App.css";
 import Router, { RouteType, RouterView } from "./router";
 
 function Home(props: any) {
-  console.log(props);
   return <h2>Home</h2>;
 }
 
@@ -15,6 +14,11 @@ function Users() {
   return <h2>Users</h2>;
 }
 
+function User(props: any) {
+  console.log(props);
+  return <h2>User Page</h2>;
+}
+
 const routes: RouteType[] = [
   {
     path: "/",
@@ -23,6 +27,10 @@ const routes: RouteType[] = [
   {
     path: "/users",
     component: Users
+  },
+  {
+    path: "/users/:id/:uid",
+    component: User
   },
   {
     path: "/about",

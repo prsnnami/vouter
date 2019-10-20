@@ -27,7 +27,10 @@ function stripTrailingSlash(path: string): string {
   }
   return path.replace(/\/$/, "");
 }
-const RouterContext = React.createContext<Partial<RouterContextProps>>({});
+
+const RouterContext = React.createContext<RouterContextProps>(
+  {} as RouterContextProps
+);
 
 const Router: React.FC<{ routes: RouteType[] }> = ({ routes, children }) => {
   const history = createHistory();
@@ -36,7 +39,7 @@ const Router: React.FC<{ routes: RouteType[] }> = ({ routes, children }) => {
 
   const [location, setLocation] = useState<Location>(history.location);
 
-  useBeforeMount(() => {
+  useEffect(() => {
     listener.current = history.listen((location, action) => {
       if (mounted.current) {
         console.group("Location Change");
@@ -49,7 +52,7 @@ const Router: React.FC<{ routes: RouteType[] }> = ({ routes, children }) => {
         setLocation(location);
       }
     });
-  });
+  }, []);
 
   useEffect(() => {
     mounted.current = true;
@@ -74,13 +77,37 @@ const Router: React.FC<{ routes: RouteType[] }> = ({ routes, children }) => {
 function match(location: Location, routes: RouteType[]) {
   const { pathname: path, key, search } = location;
 
-  let keys: any = [];
-  const regex = pathToRegexp(stripTrailingSlash(path), keys, { end: true });
-  console.log(regex);
-  console.log(regex.exec("/users/123"));
-  let route = routes.filter(i => regex.test(i.path));
-  console.log(route);
-  return routes[0].component;
+  const patterns = routes.map(route => {
+    let keys: any = [];
+    let pattern = pathToRegexp(stripTrailingSlash(route.path), keys);
+    return {
+      pattern,
+      keys,
+      route
+    };
+  });
+
+  console.log("patterns", patterns);
+
+  let match = patterns.find(i => i.pattern.test(path));
+
+  if (!match) {
+    return null;
+  }
+
+  if (match.keys) {
+    let params = match.keys.reduce((prev: any, key: any, index: number) => {
+      let values = match!.pattern.exec(path) || [];
+      return {
+        ...prev,
+        [key.name]: values[index + 1]
+      };
+    }, {});
+    console.log("params", params);
+  }
+
+  console.log("match", match);
+  return match;
 }
 
 export const RouterView: React.FC = () => {
@@ -91,9 +118,13 @@ export const RouterView: React.FC = () => {
   );
   const { location, routes } = context;
 
-  const component = match(location!, routes!);
+  const matchObj = match(location, routes!);
 
-  return React.createElement(component);
+  if (!matchObj) return null;
+
+  const { pattern, keys, route } = matchObj;
+
+  return React.createElement(route.component);
 };
 
 export default Router;
